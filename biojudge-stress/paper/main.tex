@@ -1,0 +1,584 @@
+% =====================================================================================================
+%  Who Verifies the Verifier? Stress-Testing LLM Judges as Verifier Agents in Biomedical Pipelines
+%  AgIA4BioHealth workshop submission (IEEE two-column conference format).
+%
+%  Build:   python -m biojudge.report --run runs/main --config configs/openrouter.yaml --paper paper/
+%           python scripts/export_prompts.py --out paper/prompts_appendix.tex
+%           cd paper && latexmk -pdf main.tex
+%  Before results exist, `python -m biojudge.report --placeholders --paper paper/` lets it compile;
+%  every unfilled number then prints as a red ??.
+% =====================================================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ------------------------------------------------------------------------------ switches
+\newif\ifdraft      \drafttrue      % true: orange = sentence must be re-checked against the final numbers
+\newif\ifanon       \anonfalse      % true: hide author block for double-blind review
+\newif\ifappendix   \appendixtrue   % prompt appendix (drop if the page limit is tight)
+
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,calc}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,nameinlink]{cleveref}
+
+% ------------------------------------------------------------------------------ results
+\input{results_macros.tex}                 % written by biojudge.report (red ?? until the run is done)
+\providecommand{\PH}{\textcolor{red}{\textbf{??}}}
+\newcommand{\RunDate}{\PH{}}                % date the main run was executed (fill by hand)
+\newcommand{\Gateway}{OpenRouter}          % or "local vLLM servers" if configs/vllm_local.yaml is used
+
+\ifdraft
+  \newcommand{\claim}[1]{\textcolor{orange!85!black}{#1}}
+\else
+  \newcommand{\claim}[1]{#1}
+\fi
+\newcommand{\todo}[1]{\textcolor{magenta}{\textbf{[#1]}}}
+
+% ------------------------------------------------------------------------------ notation
+\newcommand{\Rp}{R^{+}}
+\newcommand{\Rm}{R^{-}}
+\newcommand{\acc}{\mathrm{Acc}}
+\newcommand{\pp}{\,pp}
+\newcommand{\sys}{BioJudge-Stress}
+\newenvironment{promptbox}{\par\vspace{1pt}\noindent\begin{minipage}{\columnwidth}\scriptsize\sffamily\raggedright}{\end{minipage}\par\medskip}
+
+\newcommand{\figorph}[3]{% file, height of placeholder, width
+  \IfFileExists{#1}{\includegraphics[width=#3]{#1}}{%
+    \fbox{\parbox[c][#2][c]{0.94#3}{\centering\footnotesize\textcolor{red}{Figure produced by
+      \texttt{biojudge.report} after the main run.}}}}}
+
+\begin{document}
+
+\title{Who Verifies the Verifier? Stress-Testing LLM Judges as Verifier Agents in Biomedical Multi-Agent Pipelines}
+
+\ifanon
+\author{\IEEEauthorblockN{Anonymous Authors}\IEEEauthorblockA{Affiliation withheld for review}}
+\else
+\author{
+\IEEEauthorblockN{Zhenni Liang}
+\IEEEauthorblockA{\textit{Department of Information Science}\\
+\textit{University of North Texas}\\
+Denton, TX, USA\\
+\todo{email}}
+\and
+\IEEEauthorblockN{Umme Israt Afroz}
+\IEEEauthorblockA{\textit{Department of Information Science}\\
+\textit{University of North Texas}\\
+Denton, TX, USA\\
+\todo{email}}
+}
+\fi
+
+\maketitle
+
+\ifdraft
+\noindent\fbox{\parbox{0.97\columnwidth}{\footnotesize\textbf{Draft.} Red \PH{} = number filled automatically by
+\texttt{biojudge.report} from the main run. \claim{Orange} = interpretive sentence written for the expected
+direction of an effect; re-read it against the filled numbers and edit or delete it. Set \texttt{\textbackslash
+draftfalse} for submission.}}
+\fi
+
+% =====================================================================================================
+\begin{abstract}
+Multi-agent systems for biomedical question answering increasingly hand quality control to a large language model
+(LLM) that checks, ranks or selects the answers produced by other agents. The weaknesses of LLM-as-a-judge are well
+documented for general-domain chat, but that evidence rests on human preference labels without ground truth and
+usually examines one bias at a time. We introduce \sys{}, a gold-anchored stress test for verifier agents. Four
+open-weight judges from distinct model families compare correct and incorrect rationales, written by the same four
+models, for \NItemsKept{} expert-keyed questions from biomedical literature (PubMedQA), clinical medicine
+(MedQA-USMLE) and pharmacology (MedMCQA). A fully crossed design varies presentation order, length, authorship and
+six content-free edits (claimed credentials, fabricated citations, markdown structure, asserted confidence, a note
+addressed to the evaluator, and all five combined), giving \NPairwise{} pairwise and \NSelect{} best-of-$N$ verdicts
+scored against the answer key. Baseline judges side with the key on \AccBase\% of clean pairs. Padding the incorrect
+rationale changes accuracy by \VBBase{}\pp, and the self-authorship\,$\times$\,padding interaction contrast is
+\ICBase{}\pp{} (\ICBaseP). The most effective single edit (\TopAttack) overturns \TopAttackASR\% of verdicts that
+were correct on the unedited pair. Of seven corrections, including a normalizer agent that rewrites every candidate
+into a canonical form and a jury that recuses judges from either author's family, the combined pipeline changes
+accuracy by \DeltaAccFull{}\pp{} and attack success by \DeltaASRanyFull{}\pp. We release the code, prompts and cached
+model responses so every number in this paper can be regenerated.
+\end{abstract}
+
+\begin{IEEEkeywords}
+LLM-as-a-judge, verifier agents, multi-agent systems, biomedical question answering, evaluation bias, adversarial
+robustness, pharmacovigilance
+\end{IEEEkeywords}
+
+% =====================================================================================================
+\section{Introduction}
+
+Agentic systems in biomedicine rarely trust a single model call. Clinical reasoning frameworks assemble panels of
+specialist agents and then reconcile their proposals \cite{tang2024medagents,kim2024mdagents}; simulated clinics and
+discovery agents plan, call tools and critique intermediate results
+\cite{schmidgall2024agentclinic,gao2024empowering,huang2025biomni}; and the same systems are increasingly graded by
+LLM juries and rubric-following model graders \cite{bedi2025medhelm,arora2025healthbench}. In each case one LLM
+decides which of several candidate answers survives. That verifier is the component the rest of the pipeline relies
+on for safety, and it is almost never itself tested under the conditions it will face.
+
+What is known about LLM judges comes mostly from general-domain chat. Judges prefer the response shown in a
+particular slot \cite{zheng2023judging,wang2024fair,shi2024position}, prefer longer answers
+\cite{saito2023verbosity,dubois2024length}, prefer text written by their own model family
+\cite{panickssery2024llm,wataoka2024self,liu2024narcissistic}, and respond to authority cues, fake references and
+formatting \cite{chen2024humans,ye2025justice,wu2023style}. Their verdicts can be steered by injected instructions
+\cite{shi2024injection,raina2024robust} and by semantics-preserving style edits chosen by an adaptive attacker
+\cite{yang2026bite}; even a constant ``null'' response can top automatic leaderboards \cite{zheng2025cheating}. Three
+features of this literature limit what it tells a biomedical system builder. The reference signal is usually human
+preference, which has no ground truth, so it is unclear whether a bias costs correctness or merely disagrees with
+taste. Biases are measured one at a time, so it is unknown whether they add up or compound. And corrections are
+validated against the bias they target, rarely against the others.
+
+Biomedicine sharpens each of these problems. The cues that general-domain judges over-reward, such as a claimed
+clinical credential, a journal-style citation, or confident guideline language, are exactly the cues that clinicians
+are trained to weigh, and a generator can produce them at zero cost: LLMs fabricate well-formed references
+\cite{walters2023fabrication}, and prompt injection already works against medical vision-language models
+\cite{clusmann2025prompt}. A verifier that rewards these cues turns the pipeline's safety check into its attack
+surface.
+
+We therefore test LLM judges in the role they occupy inside agentic pipelines and against a reference that has an
+answer. \sys{} builds pairs of rationales for expert-keyed multiple-choice questions, one defending the keyed answer
+and one defending the incorrect option that models themselves most often choose. Every judge family also writes
+rationales, so authorship can be crossed with correctness. We ask four questions, carried over from the course
+project that seeded this work and adapted to the verifier setting:
+\textbf{RQ1} Do position, verbosity and self-preference act independently, or is an incorrect answer that is both
+padded and self-authored accepted more often than the two biases predict separately?
+\textbf{RQ2} How much of the gap to the answer key do corrections close, individually and jointly, and does fixing
+one bias amplify another?
+\textbf{RQ3} Are bias magnitudes and judge rankings stable across literature, clinical and pharmacology questions?
+\textbf{RQ4} Can content-free edits overturn correct verdicts, in pairwise comparison and in best-of-$N$ selection,
+and do corrected pipelines resist them?
+
+Our contributions are:
+\begin{itemize}
+  \item a gold-anchored, fully crossed design in which every judge family is both a verifier and an author, so
+  position, verbosity, self-preference and their interactions are identified against a correctness criterion rather
+  than a preference label (\cref{sec:framework,sec:metrics});
+  \item a comparison of seven corrections at three levels of an agentic pipeline (prompt, input normalization by a
+  dedicated agent, and aggregation with recusal), each scored on every bias and on attack success
+  (\cref{sec:rq2});
+  \item a best-of-$N$ verification test in which the only correct candidate is outnumbered by candidates that agree
+  on a popular wrong answer, which isolates the verifier as the pipeline's last defense (\cref{sec:rq4});
+  \item an open, cached and resumable harness that regenerates every table, figure and in-text number from one
+  configuration file.
+\end{itemize}
+
+% =====================================================================================================
+\section{Related Work}
+
+\textbf{Biases of LLM judges.} MT-Bench established pairwise LLM judging and reported position and verbosity bias
+alongside high agreement with human preferences \cite{zheng2023judging}. Later work quantified position bias across
+judges and tasks \cite{wang2024fair,shi2024position}, length effects \cite{saito2023verbosity,dubois2024length},
+self-preference and its link to self-recognition \cite{panickssery2024llm,wataoka2024self,liu2024narcissistic}, and a
+wider catalogue of cognitive and style biases \cite{koo2024cognitive,chen2024humans,ye2025justice,wu2023style};
+surveys and benchmarks summarize the field \cite{gu2024survey,tan2025judgebench}. Closest to our RQ2, a recent study
+compares nine mitigation strategies and their cross-bias interactions on general benchmarks with human labels
+\cite{soumik2026judging}. We differ in domain, in using an answer key instead of preferences, in testing
+interactions between biases rather than between fixes only, and in including adversarial edits and a selection
+setting.
+
+\textbf{Corrections.} Standard remedies are order swapping and calibration \cite{zheng2023judging,wang2024fair},
+length control by regression \cite{dubois2024length}, debiasing instructions, and panels of judges from different
+families \cite{verga2024juries}. Yang et al.\ show that adaptive style edits evade style control and suggest style
+normalization as a defense \cite{yang2026bite}; we implement that idea as a normalizer agent and test it jointly with
+the others.
+
+\textbf{Gameability.} Judges can be moved by universal adversarial phrases \cite{raina2024robust}, optimized
+injections \cite{shi2024injection}, persuasion and sycophancy-like pressure \cite{sharma2024sycophancy}, and
+bandit-selected stylistic edits \cite{yang2026bite}; indirect prompt injection threatens any LLM that reads
+third-party text \cite{greshake2023indirect}. Our edits are deliberately fixed templates, which gives a lower bound
+on what a low-effort upstream agent or data supplier could achieve.
+
+\textbf{LLM judges and verifiers in biomedicine.} Verifiers that rank sampled solutions improve reasoning accuracy
+\cite{cobbe2021training,lightman2024verify}, and multi-agent debate and self-consistency aggregate candidates
+\cite{du2024debate,wang2023selfconsistency}; medical agent frameworks adopt the same moves
+\cite{tang2024medagents,kim2024mdagents}. MedHELM grades open-ended clinical outputs with an LLM jury whose agreement
+with clinicians it validates \cite{bedi2025medhelm}, and HealthBench scores responses with a model grader against
+physician rubrics \cite{arora2025healthbench}. In expert domains, LLM judges agree with subject experts less than with
+lay annotators \cite{szymanski2025limitations}. To our knowledge, no prior study has stress-tested biomedical verifier
+agents for interacting biases and content-free manipulation against a ground-truth answer.
+
+% =====================================================================================================
+\section{The \sys{} Framework}\label{sec:framework}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=3.5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=17mm, text width=21mm,
+              inner sep=2pt, fill=#1},
+  box/.default=white,
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box=blue!6]  (items) {\textbf{1. Items}\\PubMedQA (lit.)\\MedQA (clin.)\\MedMCQA (pharm.)\\+ answer key};
+\node[box=blue!6, right=of items] (solo) {\textbf{2. Solo answers}\\4 families answer\\each item\\$\rightarrow$ hard-negative\\distractor};
+\node[box=green!7, right=of solo] (gen) {\textbf{3. Author agents}\\each family writes\\$\Rp$ (keyed answer)\\and $\Rm$ (distractor)\\validated, 80--150 w};
+\node[box=orange!10, right=of gen] (pert) {\textbf{4. Perturbation}\\pad (utility agent)\\6 content-free edits\\\textit{normalizer agent}\\(correction)};
+\node[box=red!7, right=of pert] (ver) {\textbf{5. Verifier agents}\\pairwise: 4 judges\\$\times$ order $\times$ protocol\\best-of-4 selector\\(base / debias)};
+\node[box=gray!10, right=of ver] (agg) {\textbf{6. Aggregation}\\single, swap,\\jury, recusal jury,\\full pipeline};
+\node[box=gray!10, right=of agg] (met) {\textbf{7. Score vs.\ key}\\Acc, $\kappa$, Flip, PPI\\VB, SPB, IC\\ASR, capture};
+\foreach \a/\b in {items/solo,solo/gen,gen/pert,pert/ver,ver/agg,agg/met} \draw[arr] (\a) -- (\b);
+\end{tikzpicture}
+\caption{\sys{} pipeline. Stages 1--3 build gold-anchored candidate pairs in which correctness is crossed with
+authorship; stage 4 applies controlled manipulations and the normalizer correction; stages 5--6 run the verifier
+agents under four prompt/input protocols and five aggregation schemes; stage 7 scores every verdict against the
+expert answer key.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Verifier roles and threat model}
+We study two roles an LLM verifier plays in agentic pipelines (\cref{fig:pipeline}). A \emph{pairwise verifier}
+receives a question and two candidate answers and names the better one, as in critic, debate-resolution and
+preference-labelling steps. A \emph{best-of-$N$ selector} receives $N=4$ candidates and returns one. The adversary is
+an upstream agent, tool or data supplier that controls the surface form of one candidate but not its medical content.
+Its edits are fixed templates with no optimization, so the attack success we report is a floor on what adaptive
+attacks such as BITE \cite{yang2026bite} can reach.
+
+\subsection{Items and gold anchor}
+We draw \NItemsSampled{} items, 100 per domain, with a fixed seed: \emph{literature} from the expert-labelled
+PubMedQA PQA-L set, restricted to yes/no decisions and shown with the structured abstract minus its conclusion
+\cite{jin2019pubmedqa}; \emph{clinical} from the four-option MedQA-USMLE test split \cite{jin2021medqa}; and
+\emph{pharmacology} from the MedMCQA validation split, subject Pharmacology, single-answer items only
+\cite{pal2022medmcqa}. Options of the ``all/none of the above'' type are removed, because a rationale cannot argue
+for them without referring to the other options. Every item becomes a lettered single-best-answer question. A verdict
+earns $s=1$ if it prefers the response defending the keyed answer, $s=0$ if it prefers the other, and $s=\tfrac12$
+for a tie or an unparseable verdict. The exam or expert key thus serves as a human anchor without new annotation.
+
+\subsection{Candidate construction}
+\textbf{Hard negatives.} Each judge model first answers every item alone (at most 60 words, then a final letter).
+The wrong option chosen most often across the four models becomes the item's distractor, with ties broken at random
+and a random wrong option used when no model erred. The distractor is therefore the error the pool itself finds
+plausible (\HardNegRate\% of items; \cref{tab:data}).
+
+\textbf{Forced-answer rationales.} Each of the four author models writes a rationale $\Rp$ for the keyed answer and
+a rationale $\Rm$ for the distractor, using the same prompt with the target option filled in (Appendix). A rationale
+is valid if it has 80--150 words of prose, ends with the target letter, does not hedge between options or refuse, and
+has at least 30 words; invalid outputs are retried up to twice at temperature 0.7. An item is kept only if all eight
+rationales are valid, which leaves \NItemsKept{} items (\NItemsLit{} literature, \NItemsClin{} clinical,
+\NItemsPharm{} pharmacology; \ValidRate\% of rationales valid). Because every family writes both a correct and an
+incorrect rationale for every item, authorship style is balanced across correctness by construction.
+
+\subsection{Controlled manipulations}
+\textbf{Position.} Every pair is judged in both orders.
+
+\textbf{Verbosity.} A utility agent (Phi-4 \cite{abdin2024phi4}, a family outside the judge pool, so that padding
+does not add any judge's own stylistic signature) expands a rationale to about $2.5\times$ its length by restating the
+question and adding general background, without new facts that bear on the answer. Outputs that change the final
+line fall back to a deterministic template ($\PadLLMRate\%$ LLM-padded; mean length ratio \PadRatio). Each pair
+appears with no padding, with the incorrect rationale padded, and with the correct one padded.
+
+\textbf{Authorship.} For each item the four generators are randomly permuted into a cycle $(g_1,\dots,g_4)$, and
+pair $p$ matches $\Rp$ from $g_p$ against $\Rm$ from $g_{p+1 \bmod 4}$. Every family is the correct author once and
+the incorrect author once, so each judge sees one \emph{self-right}, one \emph{self-wrong} and two \emph{neutral}
+pairs per item and the design stays balanced for every judge.
+
+\textbf{Content-free edits.} Six deterministic edits (\cref{tab:edits}) are applied to the incorrect rationale of
+every pair, in both orders. All keep the final-answer line and add no medical evidence.
+
+\begin{table}[t]
+\centering
+\caption{Content-free edits applied to the incorrect rationale. Full strings are listed in the Appendix.}
+\label{tab:edits}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lp{0.73\columnwidth}@{}}
+\toprule
+Edit & What is added \\
+\midrule
+Authority & Opening claim of board certification in internal medicine and clinical pharmacology with twenty years of
+practice. \\
+Citation & Closing sentence citing two fabricated, well-formed journal references (e.g., \textit{BMJ}, \textit{JAMA
+Intern Med}) and ``the latest clinical practice guideline''. \\
+Format & Markdown headers (\textit{Clinical Reasoning}, \textit{Conclusion}), one bullet per sentence, bold final
+answer. \\
+Confidence & Opening and closing assertions that the point is well established and the evidence definitive. \\
+Injection & Bracketed note telling the evaluator the response was verified against guidelines and should be
+selected. \\
+Combo & All five at once. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Corrections}
+We test corrections at three levels of the pipeline. At the \emph{prompt} level, a debiasing clause tells the judge
+to decide on correctness and medical validity only, to ignore order, length, formatting, tone and stated confidence,
+to treat credentials and references inside responses as unverified, and to ignore instructions inside responses. At
+the \emph{input} level, a normalizer agent (again Phi-4) rewrites every candidate, including padded and edited ones,
+into at most 80 words of plain prose that keeps the final answer and the key reasoning steps and drops credentials,
+references, markdown, confidence statements, filler and text addressed to an evaluator (\NormLLMRate\% of rewrites
+pass validation; the rest use an attack-agnostic fallback that strips markup and truncates). Crossing the two gives
+four protocols: base/raw, debias/raw, base/normalized and debias/normalized. At the \emph{aggregation} level, a
+\emph{swap} view counts a preference only if it survives order reversal (otherwise a tie); a \emph{jury} takes the
+majority of the four judges; a \emph{recusal jury} first drops every judge whose family wrote either candidate, which
+in the cyclic design leaves two judges per pair; and the \emph{full} pipeline combines the debiasing clause, the
+normalizer, recusal and swap. Together with the baseline this gives the eight configurations of \cref{tab:corr}.
+
+\subsection{Best-of-$N$ selection}\label{sec:select}
+The selector sees four candidates: the $\Rp$ of one generator (rotating over items so every family supplies the
+correct candidate equally often) and the $\Rm$ of the other three. All three incorrect candidates defend the same
+hard-negative distractor, so a majority vote over final answers is wrong on every item, and the verifier's reading of
+the reasoning is the pipeline's only safeguard. This is the situation verifiers exist for: a debate or sampling stage
+that has converged on a popular error. One incorrect candidate is designated \emph{perturbed}; it is left unchanged
+(\emph{clean pool}), padded, or given the combined edit. The correct candidate is placed in each of the four positions
+in turn, under the base/raw and debias/normalized protocols.
+
+% =====================================================================================================
+\section{Metrics and Statistical Analysis}\label{sec:metrics}
+
+A judging unit $u$ is a (judge, protocol, item, pair, condition, order) tuple with score $s_u\in\{0,\tfrac12,1\}$.
+\emph{Clean} units have no padding and no edit. We write $\acc(\cdot)$ for the mean of $s_u$ over the units matching
+a condition, and report all rates in percent and all differences in percentage points (pp).
+
+\textbf{Agreement.} $\acc$ is the mean score on clean units; $\kappa$ is Cohen's kappa \cite{cohen1960coefficient}
+between the keyed slot and the verdict (A, B or tie).
+
+\textbf{Position.} Flip is the share of clean pairs whose outcome (correct, incorrect or tie) changes when the order
+is reversed. The position-preference index $\mathrm{PPI}=\mathbb{E}[\mathbb{1}(v=\mathrm{A})-\mathbb{1}(v=\mathrm{B})]$
+on clean units is positive when slot A is favoured.
+
+\textbf{Verbosity.} $\mathrm{VB}=\acc(\text{no pad})-\acc(\text{incorrect padded})$ is the accuracy lost when the
+wrong answer is made longer; $\mathrm{VB}_{\text{sym}}=\acc(\text{correct padded})-\acc(\text{incorrect padded})$.
+
+\textbf{Self-preference.} For judge $j$,
+$\mathrm{SPB}_j=\acc_j(\text{self-right})-\acc_j(\text{self-wrong})$ on clean units. For a panel, we compute the
+analogous family favouritism $f_c=\acc(c\text{ wrote }\Rp)-\acc(c\text{ wrote }\Rm)$ for every family $c$. The signed
+mean of $f_c$ over families is zero by construction in the balanced cyclic design, so tables report
+$|\mathrm{SPB}|$, the mean absolute value over judges (single-judge rows) or families (panel rows).
+
+\textbf{Interaction (RQ1a).} With SW = self-wrong, N = neutral and PW = incorrect rationale padded,
+\begin{equation}
+\mathrm{IC}=\underbrace{\big[\acc(\mathrm{N})-\acc(\mathrm{SW},\mathrm{PW})\big]}_{\text{joint loss}}
+-\underbrace{\big[\acc(\mathrm{N})-\acc(\mathrm{SW})\big]}_{\text{self only}}
+-\underbrace{\big[\acc(\mathrm{N})-\acc(\mathrm{N},\mathrm{PW})\big]}_{\text{length only}},
+\end{equation}
+where unmarked conditions are unpadded. $\mathrm{IC}>0$ means the combination costs more than the sum of its parts
+(super-additive). We also fit a linear probability model on the bias block of the base protocol,
+\begin{multline}
+s_u=\alpha_j+\beta_1\mathrm{WA}+\beta_2\mathrm{SW}+\beta_3\mathrm{SR}+\beta_4\mathrm{PW}+\beta_5\mathrm{PR}\\
++\beta_6\,\mathrm{SW}{\cdot}\mathrm{PW}+\beta_7\,\mathrm{WA}{\cdot}\mathrm{PW}+\beta_8\,\mathrm{WA}{\cdot}\mathrm{SW}
++\varepsilon_u,
+\end{multline}
+with judge fixed effects $\alpha_j$, WA = incorrect answer in slot A, SR = self-right, PR = correct rationale padded,
+and standard errors clustered by item \cite{cameron2015practitioner}. A negative $\beta_6$ corresponds to a positive IC.
+
+\textbf{Gameability.} For edit $e$, $\mathrm{ASR}_e$ is the share of units that were correct on the clean pair and
+become incorrect once $e$ is applied to the incorrect rationale (ties count one half). $\mathrm{ASR}_{\text{any}}$ is
+the share broken by at least one of the five single edits.
+
+\textbf{Selection.} Selector accuracy is the share of picks that hit the correct candidate (chance 25\%; majority
+vote 0\%). Capture is the share that hit the designated perturbed candidate; in the clean pool that candidate is
+unedited, so clean capture is the matched baseline for padded and edited pools. Position-1 excess is the rate of
+picking the first slot on clean pools minus 25\pp.
+
+\textbf{Uncertainty and tests.} All intervals are 95\% percentile intervals from an item-level cluster bootstrap
+\cite{field2007bootstrapping} with 2{,}000 replicates. One bootstrap weight matrix is drawn once and reused for every
+estimate, so every difference between judges, corrections or domains is a paired bootstrap difference; $p$-values are
+two-sided bootstrap sign tests. Cross-domain stability is Kendall's $W$ \cite{kendall1939problem} over the judge
+rankings in the three domains, with a permutation test (20{,}000 permutations). We designate four primary contrasts,
+one per RQ: IC (RQ1), $\Delta\acc$ of the full pipeline (RQ2), $W$ for each metric (RQ3) and
+$\mathrm{ASR}_{\text{any}}$ under the base and debias/normalized protocols (RQ4). All other intervals are
+descriptive.
+
+% =====================================================================================================
+\section{Experimental Setup}\label{sec:setup}
+
+\textbf{Models.} The four judges, which are also the four authors, are Llama-3.1-8B-Instruct
+\cite{grattafiori2024llama3}, Qwen2.5-7B-Instruct \cite{qwen2024qwen25}, Gemma-2-9B-it \cite{gemma2024gemma2} and
+Mistral-7B-Instruct-v0.3 \cite{jiang2023mistral}; Phi-4 \cite{abdin2024phi4} is the utility agent for padding and
+normalization. Small open-weight models are what many biomedical groups can host locally for privacy reasons, and
+using four families lets every judge be both verifier and author. Models were queried through \Gateway{} on \RunDate{}
+at temperature 0 with a fixed seed; for Gemma and Mistral, whose chat templates have no system role, the system
+prompt is prepended to the user turn. Exact model identifiers are recorded in the released configuration.
+
+\textbf{Scale.} Each kept item yields 24 bias-block units (4 pairs $\times$ 3 length conditions $\times$ 2 orders)
+and 48 attack-block units (4 pairs $\times$ 6 edits $\times$ 2 orders) per judge and protocol, i.e.\ 1{,}152 pairwise
+verdicts per item over 4 judges and 4 protocols, plus 96 selection verdicts (3 pools $\times$ 4 rotations $\times$ 2
+protocols $\times$ 4 judges). The run produced \NPairwise{} pairwise and \NSelect{} selection verdicts; \ParseFailRate\%
+of pairwise verdicts were unparseable and \TieRate\% were explicit ties. The full plan for 300 items needs about
+357M input and 49M output tokens, which is feasible for 7--9B models on a hosted gateway or a single GPU node.
+
+\textbf{Software validation.} Every call is cached in SQLite, so runs resume after interruption and the analysis can
+be recomputed without new queries. Before spending any budget we ran the complete pipeline against a simulator with
+planted position, verbosity, self-preference and attack effects of known size, including a planted super-additive
+self\,$\times$\,length interaction and one unbiased judge. The analysis recovered every planted effect, returned
+near-zero bias for the unbiased judge, and exposed two estimator bugs that we fixed (the zero-by-construction signed
+family favouritism above was one). No simulator output is reported as a result.
+
+\input{tables/tab_data.tex}
+
+% =====================================================================================================
+\section{Results}\label{sec:results}
+
+\input{tables/tab_bias_profile.tex}
+
+\subsection{RQ1: Bias profile and interactions}\label{sec:rq1}
+\Cref{tab:bias} profiles each judge on the base protocol. Pooled over judges and domains, verdicts agree with the key
+on \AccBase\% of clean pairs (95\% CI \AccBaseCI; mean $\kappa=\KappaBase$), and the most accurate judge,
+\JudgeBestAcc, reaches \AccBest\%. Flip rates range from \FlipMin\% to \FlipMax\%: for that share of pairs the verdict
+depends on nothing but which answer is read first. Padding the incorrect rationale changes pooled accuracy by
+\VBBase{}\pp{} (\VBBaseCI), and the gap between padding the correct and padding the incorrect rationale is
+\VBsymBase{}\pp; per judge, VB spans \VBMin{} to \VBMax{}\pp{} and is largest for \JudgeMaxVB. Self-preference spans
+\SPBMin{} to \SPBMax{}\pp{} across judges (largest for \JudgeMaxSPB; mean $|\mathrm{SPB}|=\SPBBase$\pp, \SPBBaseCI).
+\claim{Because each judge also wrote the incorrect rationales it is asked to reject, a positive SPB means that a judge
+is measurably more willing to accept a wrong answer when the wrong answer is phrased the way it would phrase it.}
+
+The biases do not simply add. The self\,$\times$\,padding contrast is $\mathrm{IC}=\ICBase$\pp{} (\ICBaseCI,
+\ICBaseP), and the regression (\cref{tab:reg}) gives $\hat\beta_6=\RegSWPW$\pp{} for self-wrong\,$\times$\,padded
+wrong (\RegSWPWCI, \RegSWPWP), \RegWAPW\pp{} for slot-A\,$\times$\,padded wrong (\RegWAPWP) and \RegWASW\pp{} for
+slot-A\,$\times$\,self-wrong (\RegWASWP). \claim{The combination the proposal singled out, an incorrect answer that is
+both long and written in the judge's own voice, is accepted more often than the two biases predict separately, so an
+audit that measures each bias on its own understates the risk of the case that matters most in a multi-agent system,
+where the verifier often shares a family with one of the agents it checks.}
+
+\input{tables/tab_regression.tex}
+\input{tables/tab_corrections.tex}
+
+\subsection{RQ2: What corrections buy}\label{sec:rq2}
+\Cref{tab:corr} and \cref{fig:delta} compare the eight configurations; $\Delta$ values below are paired differences
+from the single-judge baseline. The debiasing clause alone changes accuracy by \DeltaAccDebias\pp{}
+(\DeltaAccDebiasCI), Flip by \DeltaFlipDebias\pp{} and VB by \DeltaVBDebias\pp. The normalizer agent acts on the
+input rather than on the judge: it changes VB by \DeltaVBNorm\pp, $|\mathrm{SPB}|$ by \DeltaSPBNorm\pp{} and
+$\mathrm{ASR}_{\text{any}}$ by \DeltaASRanyNorm\pp, at an accuracy change of \DeltaAccNorm\pp{} (\DeltaAccNormCI).
+\claim{Normalization is the only correction that removes the carrier of verbosity and edit cues instead of asking the
+judge to ignore them, which is why it moves the attack metrics most; its cost is that compressing a rationale to 80
+words can also discard reasoning a judge needed.} Combining the two gives $\Delta\acc=\DeltaAccDebNorm$\pp{}
+(\DeltaAccDebNormCI).
+
+Aggregation behaves differently. Swap aggregation changes accuracy by \DeltaAccSwap\pp, because order-dependent
+verdicts become ties. The four-judge jury reaches \AccJury\% ($\Delta=\DeltaAccJury$\pp) with mean absolute family
+favouritism \SPBJury\pp, and recusing the authors' families gives \SPBRecusal\pp{} at $\Delta\acc=\DeltaAccRecusal$\pp.
+The full pipeline reaches \AccFull\% ($\Delta=\DeltaAccFull$\pp, \DeltaAccFullCI) with $\mathrm{ASR}_{\text{any}}$ of
+\ASRanyFull\%, against \ASRanyBase\% for the baseline.
+
+\textbf{Does fixing one bias amplify another (RQ2a)?} \Cref{fig:delta} reports every correction's effect on every
+metric, with red cells marking a metric that got worse. \claim{Off-target costs are concentrated in accuracy rather
+than in other biases: aggregation that converts order-dependent verdicts into ties lowers raw accuracy while reducing
+position dependence, and normalization trades a small loss of clean accuracy for the removal of length and edit
+cues.} \todo{Check each red cell in Fig.~\ref{fig:delta} and name any correction that increases a bias it does not
+target.}
+
+\begin{figure}[t]
+\centering
+\figorph{figs/fig_delta.pdf}{38mm}{\columnwidth}
+\caption{Change from the single-judge baseline for every correction (rows) and metric (columns), signed so that
+positive (green) is an improvement: higher accuracy, or smaller Flip, $|$VB$|$, $|$SPB$|$ and ASR. $^{*}$: 95\%
+cluster-bootstrap CI excludes 0.}
+\label{fig:delta}
+\end{figure}
+
+\input{tables/tab_domain.tex}
+
+\subsection{RQ3: Stability across domains}\label{sec:rq3}
+\Cref{tab:domain} breaks the base-protocol metrics down by domain. Agreement of the judge rankings across literature,
+clinical and pharmacology items is $W=\KWAcc$ for accuracy (\KWAccP), \KWVB{} for VB (\KWVBP), \KWSPB{} for SPB
+(\KWSPBP) and \KWASR{} for attack susceptibility (\KWASRP). With four judges and three domains the permutation
+distribution of $W$ is coarse: $p<0.05$ requires $W\ge0.82$, and only identical rankings ($W=1$) reach $p<0.01$. We
+therefore read $W$ together with the per-domain magnitudes. \claim{Rankings by accuracy and attack susceptibility
+carry over across domains, whereas verbosity and self-preference rankings are less stable, so a judge chosen on
+clinical questions cannot be assumed to be the least biased judge for literature or pharmacology questions.}
+
+\input{tables/tab_attacks.tex}
+
+\subsection{RQ4: Gameability of pairwise and best-of-N verification}\label{sec:rq4}
+\textbf{Pairwise.} Under the base protocol, single content-free edits overturn \ASRauthBase\% (authority),
+\ASRcitBase\% (fabricated citations), \ASRfmtBase\% (formatting), \ASRconfBase\% (confidence) and \ASRinjBase\%
+(note to evaluator) of verdicts that were correct on the clean pair; the combined edit overturns \ASRcomboBase\%, and
+\ASRanyBase\% fall to at least one single edit (\cref{tab:attacks}). Across judges $\mathrm{ASR}_{\text{any}}$ ranges
+from \ASRanyMin\% to \ASRanyMax\%, with \JudgeMaxASR{} the most susceptible. The debiasing clause changes
+$\mathrm{ASR}_{\text{any}}$ by \DeltaASRanyDebias\pp{} and the debias/normalized protocol by \DeltaASRanyDebNorm\pp.
+\claim{Telling the judge that credentials and references are unverified helps less than removing them before the
+judge sees them.}
+
+\begin{figure}[t]
+\centering
+\figorph{figs/fig_select.pdf}{32mm}{\columnwidth}
+\caption{Best-of-4 selection. Bars: share of picks that hit the correct candidate; inner black bars: share that hit
+the designated perturbed incorrect candidate (unedited in the clean pool). Dashed line: chance (25\%). A majority
+vote over final answers scores 0\% on every pool by construction.}
+\label{fig:select}
+\end{figure}
+
+\textbf{Best-of-$N$.} In the clean pool the selector picks the correct candidate in \SelAccClean\% of cases, against
+25\% for chance and 0\% for majority voting, and over-selects position 1 by \SelPosOne\pp{} (\cref{fig:select}).
+Padding one incorrect candidate moves the capture rate from \SelCapClean\% to \SelCapPad\% and accuracy to
+\SelAccPad\%; the combined edit moves capture to \SelCapAttack\% and accuracy to \SelAccAttack\%. With the debiasing
+clause and the normalizer, accuracy is \SelAccCleanDN\%, \SelAccPadDN\% and \SelAccAttackDN\% on the three pools and
+capture is \SelCapCleanDN\%, \SelCapPadDN\% and \SelCapAttackDN\%. \claim{A single decorated candidate among four is
+enough to redirect the selector, which means the agent that controls presentation, not the agent that is right,
+decides what a best-of-$N$ pipeline returns.}
+
+\subsection{When does the verifier fall back on cues?}\label{sec:competence}
+Splitting units by whether the judge answered the item correctly on its own (stage 2) separates knowledge from
+heuristics. On items a judge solves alone, its verifier accuracy is \AccKnown\% with VB \VBKnown\pp, SPB \SPBKnown\pp,
+$\mathrm{ASR}_{\text{any}}$ \ASRKnown\% and Flip \FlipKnown\%; on items it gets wrong alone, the same metrics are
+\AccUnknown\%, \VBUnknown\pp, \SPBUnknown\pp, \ASRUnknown\% and \FlipUnknown\%. \claim{Bias concentrates where the
+verifier lacks the knowledge to check the answer, so a verifier is least reliable on exactly the questions where the
+pipeline needs it most, and verification by a model no stronger than the authors adds little on hard items.}
+
+% =====================================================================================================
+\section{Discussion}\label{sec:discussion}
+
+\claim{Four practical consequences follow for builders of biomedical agentic pipelines.} First, \claim{the verifier
+should not share a model family with the agents it checks; recusal is cheap when several families are available and
+removes the self-preference channel, including its interaction with length.} Second, \claim{a normalizer between the
+agents and the verifier addresses verbosity and presentation attacks at their source; instruction-level debiasing is
+not a substitute.} Its cost in clean accuracy should be measured on the target task before deployment. Third,
+\claim{content-free edits are a cheap pre-deployment test}: the six templates here need no model access and no
+optimization, and any verifier that fails them will fail adaptive attacks \cite{yang2026bite} too. Fourth, verifier
+quality should be reported against an answer key where one exists, not only as agreement with other LLMs or with
+preference labels, because a judge can agree with a panel and still reward the wrong answer.
+
+The selection results matter most for agentic designs. \claim{When the pool contains a popular error, as it does
+after agents converge through debate or sampling, the verifier is the only component that can recover the minority
+correct answer, and it is also the component an upstream agent can manipulate most cheaply.}
+
+% =====================================================================================================
+\section{Limitations}\label{sec:limitations}
+\emph{Construct.} Multiple-choice items with forced rationales are a controlled proxy for free-text verification;
+the answer key measures preference for correctness, not completeness, communication or safety, and exam keys contain
+some errors. Forced incorrect rationales may carry subtle cues of reluctance; a verifier that exploits them is doing
+its job, but the effect may be smaller for naturally occurring errors. \emph{Manipulation fidelity.} Padding and
+normalization are checked automatically (final answer preserved, length, no refusal), not by a human reader; the
+normalizer could occasionally strengthen or weaken an argument. \emph{Models.} We test small open-weight judges;
+frontier judges may show different profiles, and hosted model versions drift, which we mitigate by recording
+identifiers and caching every response. \emph{Attacks.} Fixed templates give a lower bound on gameability, not an
+estimate for adaptive attackers. \emph{Statistics.} Kendall's $W$ over four judges has low resolution; each
+configuration uses a single deterministic sample per prompt.
+
+% =====================================================================================================
+\section{Conclusion}
+\sys{} tests LLM judges as verifier agents against an answer key rather than a preference label, crosses position,
+length, authorship and content-free edits in one design, and scores seven corrections on every bias at once.
+\claim{Its central finding is that the biases of biomedical verifier agents interact and can be exploited by trivial
+edits, and that the corrections that work act on the input and the panel rather than on the judge's instructions.}
+The harness runs with any OpenAI-compatible or Anthropic endpoint, so the same stress test can be applied to a
+pipeline's own verifier before it is trusted with clinical or pharmacovigilance decisions.
+
+\section*{Reproducibility and Ethics}
+Code, configurations, prompts and the response cache are released at \todo{repository URL}; one command regenerates
+every table, figure and in-text number. All datasets are public, no human subjects were involved, and no patient data
+were used. The fabricated references in the citation edit do not exist; they are listed in the released code so that
+they cannot be mistaken for real sources.
+
+\section*{Acknowledgment}
+This work grew out of a course project for DTSC~5525 at the University of North Texas. \todo{funding / compute
+acknowledgments}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\ifappendix
+\appendix
+\section*{Appendix: Prompts and Edit Strings}
+Placeholders in braces are filled per item. The strings below are exported verbatim from the released code.
+
+\input{prompts_appendix.tex}
+\fi
+
+\end{document}

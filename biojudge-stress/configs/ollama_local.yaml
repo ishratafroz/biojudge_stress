@@ -1,0 +1,47 @@
+# Zero-cost variant of the main design on a single consumer GPU (RTX 3050, 6 GB) with Ollama.
+# Small 2-4B models from the same five families as the main config; Q4_K_M quantisation.
+#   OLLAMA_HOST=127.0.0.1:11435 OLLAMA_NUM_PARALLEL=4 ollama serve
+#   ollama pull llama3.2:3b qwen2.5:3b gemma2:2b ministral-3:3b phi4-mini
+run_name: local
+out_dir: runs
+seed: 2026
+
+data:
+  domains:
+    literature:   {source: pubmedqa,      n: 25}
+    clinical:     {source: medqa,         n: 25}
+    pharmacology: {source: medmcqa_pharm, n: 25}
+  distractor: hard
+
+_ollama: &ol
+  provider: openai
+  base_url: http://127.0.0.1:11435/v1
+  api_key_env: OLLAMA_API_KEY
+
+models:
+  llama:   {<<: *ol, model: "llama3.2:3b",    family: llama,   display: Llama-3.2-3B}
+  qwen:    {<<: *ol, model: "qwen2.5:3b",     family: qwen,    display: Qwen2.5-3B}
+  gemma:   {<<: *ol, model: "gemma2:2b",      family: gemma,   display: Gemma-2-2B, merge_system: true}
+  mistral: {<<: *ol, model: "ministral-3:3b", family: mistral, display: Ministral-3-3B}
+  phi:     {<<: *ol, model: "phi4-mini",      family: phi,     display: Phi-4-mini}
+
+roles:
+  generators: [llama, qwen, gemma, mistral]
+  judges:     [llama, qwen, gemma, mistral]
+  utility: phi
+
+experiment:
+  protocols: [base_raw, debias_raw, base_norm, debias_norm]
+  attacks: [authority, citation, format, confidence, injection, combo]
+  attack_pairs_per_item: 2
+  pad_mode: llm
+  pad_ratio: 2.5
+  select: {enabled: true, protocols: [base_raw, debias_norm]}
+
+runtime:
+  concurrency: 8
+  request_timeout: 300
+  max_api_retries: 4
+
+analysis:
+  bootstrap: 2000

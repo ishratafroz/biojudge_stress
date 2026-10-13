@@ -1,0 +1,30 @@
+# Cheap pilot (~1-2% of the main run): checks model IDs, refusal rates for forced wrong rationales,
+# parse rates and padding quality before committing to the full run.
+run_name: pilot
+out_dir: runs
+seed: 2026
+data:
+  domains:
+    literature:   {source: pubmedqa,      n: 10}
+    clinical:     {source: medqa,         n: 10}
+    pharmacology: {source: medmcqa_pharm, n: 10}
+  distractor: hard
+_openrouter: &or
+  provider: openai
+  base_url: https://openrouter.ai/api/v1
+  api_key_env: OPENROUTER_API_KEY
+models:
+  llama:   {<<: *or, model: meta-llama/llama-3.1-8b-instruct,   family: llama,   display: Llama-3.1-8B}
+  qwen:    {<<: *or, model: qwen/qwen-2.5-7b-instruct,          family: qwen,    display: Qwen2.5-7B}
+  gemma:   {<<: *or, model: google/gemma-3-12b-it,              family: gemma,   display: Gemma-3-12B, merge_system: true}
+  mistral: {<<: *or, model: mistralai/mistral-nemo,             family: mistral, display: Mistral-Nemo-12B, merge_system: true}
+  phi:     {<<: *or, model: microsoft/phi-4,                    family: phi,     display: Phi-4}
+roles:
+  generators: [llama, qwen, gemma, mistral]
+  judges:     [llama, qwen, gemma, mistral]
+  utility: phi
+experiment:
+  protocols: [base_raw, debias_norm]
+  attack_pairs_per_item: 2
+analysis:
+  bootstrap: 200

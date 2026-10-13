@@ -1,0 +1,32 @@
+# Offline smoke test with a simulated backend and planted biases. Numbers produced here are
+# NOT results; they only prove the pipeline and metrics recover known effects.
+run_name: mock
+out_dir: runs
+seed: 7
+data:
+  domains:
+    literature:   {source: synthetic, n: 60}
+    clinical:     {source: synthetic, n: 60}
+    pharmacology: {source: synthetic, n: 60}
+  distractor: hard
+models:
+  llama:   {provider: mock, model: mock-llama,   family: llama,   display: Mock-Llama}
+  qwen:    {provider: mock, model: mock-qwen,    family: qwen,    display: Mock-Qwen}
+  gemma:   {provider: mock, model: mock-gemma,   family: gemma,   display: Mock-Gemma}
+  mistral: {provider: mock, model: mock-mistral, family: mistral, display: Mock-Mistral}
+  phi:     {provider: mock, model: mock-phi,     family: phi,     display: Mock-Phi}
+roles:
+  generators: [llama, qwen, gemma, mistral]
+  judges:     [llama, qwen, gemma, mistral]
+  utility: phi
+experiment:
+  pad_mode: llm
+analysis:
+  bootstrap: 300
+mock:
+  debias_factor: 0.3
+  judges:   # planted effects: llama = verbose-loving & self-preferring; qwen = nearly unbiased
+    llama:   {q: 2.0, v: 1.5, s: 1.2, a: 0.8, pos: 0.8, competence: 0.6}
+    qwen:    {q: 3.0, v: 0.0, s: 0.0, a: 0.1, pos: 0.0, competence: 0.8}
+    gemma:   {q: 2.0, v: 0.5, s: 0.4, a: 0.5, pos: -0.5, competence: 0.7}
+    mistral: {q: 1.5, v: 0.8, s: 0.6, a: 1.0, pos: 0.4, competence: 0.55}

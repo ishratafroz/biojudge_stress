@@ -1,0 +1,4 @@
+  [pad] 584/584  (438s)
+  [normalize] 2920/2920  (8147s)
+[perturb] 5840 text variants
+[done] 8585s; outputs in runs\local

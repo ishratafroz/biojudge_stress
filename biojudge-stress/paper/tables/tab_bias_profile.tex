@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering
+\caption{Bias profile of each judge (base prompt, raw responses), pooled over the three domains. Acc = agreement with the expert answer key on clean pairs (\%); $\kappa$ = Cohen's kappa vs.\ gold; Flip = verdict changes under order reversal (\%); PPI = position-preference index ($+$ favours slot A, pp); VB = accuracy lost when the incorrect response is padded (pp); SPB = accuracy when the judge's own family wrote the correct vs.\ the incorrect answer (pp); IC = self$\times$verbosity interaction contrast ($>0$ super-additive, pp); ASR = attack success rate (\%). Subscripts are 95\% cluster-bootstrap half-widths; bold marks CIs excluding 0.}
+\label{tab:bias}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccccc}
+\toprule
+Judge & Acc & $\kappa$ & Flip & PPI & VB & SPB & IC$_{S\times V}$ & ASR$_\text{combo}$ & ASR$_\text{any}$ \\
+\midrule
+Llama-3.2-3B & 47.6{\scriptsize$\pm$5.5} & -0.05{\scriptsize$\pm$0.10} & 39.0{\scriptsize$\pm$6.2} & \textbf{10.6}{\scriptsize$\pm$7.9} & \textbf{9.1}{\scriptsize$\pm$4.4} & 5.1{\scriptsize$\pm$11.8} & 4.3{\scriptsize$\pm$9.8} & 36.1{\scriptsize$\pm$7.6} & 57.7{\scriptsize$\pm$7.7} \\
+Qwen2.5-3B & 59.2{\scriptsize$\pm$4.8} & 0.18{\scriptsize$\pm$0.10} & 36.3{\scriptsize$\pm$5.1} & \textbf{15.2}{\scriptsize$\pm$7.6} & \textbf{16.9}{\scriptsize$\pm$5.4} & \textbf{-12.7}{\scriptsize$\pm$12.5} & 7.9{\scriptsize$\pm$10.2} & 42.3{\scriptsize$\pm$7.8} & 65.6{\scriptsize$\pm$7.9} \\
+Gemma-2-2B & 52.3{\scriptsize$\pm$4.1} & 0.05{\scriptsize$\pm$0.08} & 50.3{\scriptsize$\pm$6.2} & \textbf{40.6}{\scriptsize$\pm$6.9} & \textbf{15.8}{\scriptsize$\pm$4.3} & -7.9{\scriptsize$\pm$9.8} & 1.0{\scriptsize$\pm$8.5} & 57.3{\scriptsize$\pm$7.7} & 53.1{\scriptsize$\pm$8.0} \\
+Ministral-3-3B & 59.8{\scriptsize$\pm$5.2} & 0.18{\scriptsize$\pm$0.10} & 31.2{\scriptsize$\pm$5.3} & 0.5{\scriptsize$\pm$6.0} & 1.7{\scriptsize$\pm$3.8} & \textbf{59.2}{\scriptsize$\pm$9.1} & \textbf{-9.8}{\scriptsize$\pm$9.2} & 23.4{\scriptsize$\pm$7.1} & 46.2{\scriptsize$\pm$7.8} \\
+\bottomrule
+\end{tabular}
+\end{table*}

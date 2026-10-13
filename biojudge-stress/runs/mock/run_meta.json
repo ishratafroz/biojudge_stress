@@ -1,0 +1,171 @@
+{
+  "config": {
+    "run_name": "mock",
+    "out_dir": "runs",
+    "seed": 7,
+    "data": {
+      "domains": {
+        "literature": {
+          "source": "synthetic",
+          "n": 60
+        },
+        "clinical": {
+          "source": "synthetic",
+          "n": 60
+        },
+        "pharmacology": {
+          "source": "synthetic",
+          "n": 60
+        }
+      },
+      "distractor": "hard",
+      "pubmedqa_path": null,
+      "cache_dir": "data_cache"
+    },
+    "models": {
+      "llama": {
+        "provider": "mock",
+        "model": "mock-llama",
+        "family": "llama",
+        "display": "Mock-Llama"
+      },
+      "qwen": {
+        "provider": "mock",
+        "model": "mock-qwen",
+        "family": "qwen",
+        "display": "Mock-Qwen"
+      },
+      "gemma": {
+        "provider": "mock",
+        "model": "mock-gemma",
+        "family": "gemma",
+        "display": "Mock-Gemma"
+      },
+      "mistral": {
+        "provider": "mock",
+        "model": "mock-mistral",
+        "family": "mistral",
+        "display": "Mock-Mistral"
+      },
+      "phi": {
+        "provider": "mock",
+        "model": "mock-phi",
+        "family": "phi",
+        "display": "Mock-Phi"
+      }
+    },
+    "roles": {
+      "generators": [
+        "llama",
+        "qwen",
+        "gemma",
+        "mistral"
+      ],
+      "judges": [
+        "llama",
+        "qwen",
+        "gemma",
+        "mistral"
+      ],
+      "utility": "phi"
+    },
+    "experiment": {
+      "protocols": [
+        "base_raw",
+        "debias_raw",
+        "base_norm",
+        "debias_norm"
+      ],
+      "attacks": [
+        "authority",
+        "citation",
+        "format",
+        "confidence",
+        "injection",
+        "combo"
+      ],
+      "attack_pairs_per_item": 4,
+      "pad_mode": "llm",
+      "pad_ratio": 2.5,
+      "select": {
+        "enabled": true,
+        "protocols": [
+          "base_raw",
+          "debias_norm"
+        ]
+      }
+    },
+    "generation": {
+      "max_tokens_solo": 200,
+      "max_tokens_generate": 400,
+      "max_tokens_pad": 900,
+      "max_tokens_normalize": 250,
+      "max_tokens_judge": 300,
+      "max_retries_invalid": 2,
+      "retry_temperature": 0.7
+    },
+    "runtime": {
+      "concurrency": 16,
+      "request_timeout": 120,
+      "max_api_retries": 6,
+      "interleave_models": false
+    },
+    "analysis": {
+      "bootstrap": 300
+    },
+    "mock": {
+      "debias_factor": 0.3,
+      "judges": {
+        "llama": {
+          "q": 2.0,
+          "v": 1.5,
+          "s": 1.2,
+          "a": 0.8,
+          "pos": 0.8,
+          "competence": 0.6
+        },
+        "qwen": {
+          "q": 3.0,
+          "v": 0.0,
+          "s": 0.0,
+          "a": 0.1,
+          "pos": 0.0,
+          "competence": 0.8
+        },
+        "gemma": {
+          "q": 2.0,
+          "v": 0.5,
+          "s": 0.4,
+          "a": 0.5,
+          "pos": -0.5,
+          "competence": 0.7
+        },
+        "mistral": {
+          "q": 1.5,
+          "v": 0.8,
+          "s": 0.6,
+          "a": 1.0,
+          "pos": 0.4,
+          "competence": 0.55
+        }
+      }
+    },
+    "_config_path": "/home/uia0008@students.ad.unt.edu/files/biojudge-stress-code/biojudge-stress/configs/mock.yaml"
+  },
+  "stages": [
+    "solo",
+    "generate",
+    "perturb",
+    "judge",
+    "select"
+  ],
+  "seconds": 15.458903789520264,
+  "llm_stats": {
+    "ok:gemma": 30066,
+    "ok:llama": 30068,
+    "ok:mistral": 30074,
+    "ok:qwen": 30071,
+    "ok:phi": 8640,
+    "cache_hit": 106560
+  }
+}
