@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Linear probability model of a correct verdict (bias block, base protocol) with judge fixed effects; SEs clustered by item. Coefficients in pp. A negative interaction means the joint manipulation costs more accuracy than the sum of its parts.}
+\label{tab:reg}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Term & Coef. & 95\% CI & $p$ \\
+\midrule
+Wrong answer in slot A & -19.8 & [-23.3, -16.2] & $<$0.001 \\
+Self-wrong & -8.7 & [-12.3, -5.1] & $<$0.001 \\
+Self-right & 1.6 & [-0.6, 3.9] & 0.154 \\
+Pad wrong & -7.6 & [-10.9, -4.2] & $<$0.001 \\
+Pad right & 12.4 & [10.2, 14.7] & $<$0.001 \\
+Self-wrong $\times$ Pad wrong & -1.8 & [-5.9, 2.2] & 0.372 \\
+Slot A $\times$ Pad wrong & -5.6 & [-9.4, -1.8] & 0.004 \\
+Slot A $\times$ Self-wrong & 0.6 & [-3.6, 4.8] & 0.782 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,20 @@
+  [pairwise] 4000/56064  (384s)
+  [pairwise] 8000/56064  (785s)
+  [pairwise] 12000/56064  (1160s)
+  [pairwise] 16000/56064  (1559s)
+  [pairwise] 20000/56064  (2026s)
+  [pairwise] 24000/56064  (2450s)
+  [pairwise] 28000/56064  (2852s)
+  [pairwise] 32000/56064  (3201s)
+  [pairwise] 36000/56064  (3567s)
+  [pairwise] 40000/56064  (3898s)
+  [pairwise] 44000/56064  (4245s)
+  [pairwise] 48000/56064  (4659s)
+  [pairwise] 52000/56064  (5047s)
+  [pairwise] 56000/56064  (5408s)
+  [pairwise] 56064/56064  (5419s)
+[judge] 56064 pairwise verdicts; parse failures 831
+  [select] 4000/7008  (312s)
+  [select] 7008/7008  (547s)
+[select] 7008 best-of-N selections
+[done] 5966s; outputs in runs/local

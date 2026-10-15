@@ -1,0 +1,7 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[items] 75 items
+  [solo] 300/300  (194s)
+[solo] done; distractors: 47 hard / 75
+  [generate] 600/600  (801s)
+[generate] valid rationales 598/600; items kept 73/75
+[done] 1014s; outputs in runs\local

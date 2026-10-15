@@ -1,0 +1,20 @@
+\begin{table*}[t]
+\centering
+\caption{Debiasing corrections applied individually and jointly, pooled over judges and domains. Single-judge rows average the four judges; jury rows aggregate them. $|$SPB$|$ is the mean absolute self-preference over judges (single-judge rows) or the mean absolute family favouritism (jury rows; Sec.~\ref{sec:metrics}). $\Delta$Acc is the paired change from the baseline. Flip is undefined after swap aggregation.}
+\label{tab:corr}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccccc}
+\toprule
+Configuration & Acc & Flip & VB & $|$SPB$|$ & ASR$_\text{combo}$ & ASR$_\text{any}$ & $\Delta$Acc \\
+\midrule
+Single judge (baseline) & 54.7{\scriptsize$\pm$3.2} & 39.2{\scriptsize$\pm$3.4} & \textbf{10.9}{\scriptsize$\pm$2.6} & 21.2{\scriptsize$\pm$5.6} & 39.6{\scriptsize$\pm$4.0} & 55.8{\scriptsize$\pm$4.8} & -- \\
++ Swap aggregation & 54.7{\scriptsize$\pm$3.1} & -- & \textbf{10.8}{\scriptsize$\pm$2.7} & 19.9{\scriptsize$\pm$5.3} & 36.6{\scriptsize$\pm$5.0} & 47.9{\scriptsize$\pm$4.9} & -0.1{\scriptsize$\pm$0.4} \\
++ Debiasing prompt & 54.8{\scriptsize$\pm$2.8} & 40.0{\scriptsize$\pm$3.1} & \textbf{10.2}{\scriptsize$\pm$2.3} & 19.3{\scriptsize$\pm$5.2} & 34.3{\scriptsize$\pm$3.8} & 59.1{\scriptsize$\pm$5.0} & 0.0{\scriptsize$\pm$2.5} \\
++ Normalizer agent & 57.8{\scriptsize$\pm$3.5} & 38.4{\scriptsize$\pm$3.3} & \textbf{-5.9}{\scriptsize$\pm$2.8} & 13.5{\scriptsize$\pm$5.6} & 21.4{\scriptsize$\pm$4.3} & 46.6{\scriptsize$\pm$5.6} & \textbf{3.1}{\scriptsize$\pm$2.9} \\
++ Debias prompt + Normalizer & 58.3{\scriptsize$\pm$3.7} & 39.1{\scriptsize$\pm$3.0} & \textbf{-6.0}{\scriptsize$\pm$2.6} & 11.0{\scriptsize$\pm$4.2} & 19.5{\scriptsize$\pm$3.6} & 47.3{\scriptsize$\pm$4.4} & \textbf{3.6}{\scriptsize$\pm$2.9} \\
+Cross-family jury (4) & 55.6{\scriptsize$\pm$4.3} & 45.9{\scriptsize$\pm$6.0} & \textbf{13.9}{\scriptsize$\pm$3.7} & 32.7{\scriptsize$\pm$5.1} & 36.7{\scriptsize$\pm$6.8} & 44.1{\scriptsize$\pm$8.4} & 0.8{\scriptsize$\pm$1.4} \\
+Recusal jury & 56.8{\scriptsize$\pm$3.8} & 46.6{\scriptsize$\pm$5.5} & \textbf{11.6}{\scriptsize$\pm$3.6} & 28.3{\scriptsize$\pm$5.7} & 34.5{\scriptsize$\pm$6.0} & 49.1{\scriptsize$\pm$7.5} & \textbf{2.0}{\scriptsize$\pm$1.6} \\
+Full NRS pipeline & 56.8{\scriptsize$\pm$3.5} & -- & \textbf{-6.8}{\scriptsize$\pm$3.9} & 9.9{\scriptsize$\pm$4.3} & 30.0{\scriptsize$\pm$9.6} & 45.7{\scriptsize$\pm$9.9} & 2.1{\scriptsize$\pm$3.5} \\
+\bottomrule
+\end{tabular}
+\end{table*}
