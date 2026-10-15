@@ -1,0 +1,28 @@
+# Same design on local GPUs with vLLM (one OpenAI-compatible server per model), e.g.
+#   vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8001 --seed 2026
+#   vllm serve Qwen/Qwen2.5-7B-Instruct          --port 8002 --seed 2026
+#   vllm serve google/gemma-2-9b-it              --port 8003 --seed 2026
+#   vllm serve mistralai/Mistral-7B-Instruct-v0.3 --port 8004 --seed 2026
+#   vllm serve microsoft/phi-4                   --port 8005 --seed 2026
+run_name: main_vllm
+out_dir: runs
+seed: 2026
+data:
+  domains:
+    literature:   {source: pubmedqa,      n: 100}
+    clinical:     {source: medqa,         n: 100}
+    pharmacology: {source: medmcqa_pharm, n: 100}
+models:
+  llama:   {provider: openai, base_url: "http://localhost:8001/v1", model: meta-llama/Llama-3.1-8B-Instruct,   family: llama,   display: Llama-3.1-8B}
+  qwen:    {provider: openai, base_url: "http://localhost:8002/v1", model: Qwen/Qwen2.5-7B-Instruct,           family: qwen,    display: Qwen2.5-7B}
+  gemma:   {provider: openai, base_url: "http://localhost:8003/v1", model: google/gemma-2-9b-it,               family: gemma,   display: Gemma-2-9B, merge_system: true}
+  mistral: {provider: openai, base_url: "http://localhost:8004/v1", model: mistralai/Mistral-7B-Instruct-v0.3, family: mistral, display: Mistral-7B, merge_system: true}
+  phi:     {provider: openai, base_url: "http://localhost:8005/v1", model: microsoft/phi-4,                    family: phi,     display: Phi-4}
+roles:
+  generators: [llama, qwen, gemma, mistral]
+  judges:     [llama, qwen, gemma, mistral]
+  utility: phi
+runtime:
+  concurrency: 64
+analysis:
+  bootstrap: 2000

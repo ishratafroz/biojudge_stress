@@ -1,0 +1,30 @@
+{
+  "ministral-3:3b": {
+    "digest": "f04aa1c738f64e13c625b82ae92504fc0260fa6723b509ed1ece0fa188179b1d",
+    "quantization": "Q4_K_M",
+    "parameter_size": "3.8B",
+    "family": "mistral3",
+    "size_bytes": 2953840808
+  },
+  "gemma2:2b": {
+    "digest": "8ccf136fdd5298f3ffe2d69862750ea7fb56555fa4d5b18c04e3fa4d82ee09d7",
+    "quantization": "Q4_0",
+    "parameter_size": "2.6B",
+    "family": "gemma2",
+    "size_bytes": 1629518495
+  },
+  "qwen2.5:3b": {
+    "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+    "quantization": "Q4_K_M",
+    "parameter_size": "3.1B",
+    "family": "qwen2",
+    "size_bytes": 1929912432
+  },
+  "llama3.2:3b": {
+    "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+    "quantization": "Q4_K_M",
+    "parameter_size": "3.2B",
+    "family": "llama",
+    "size_bytes": 2019393189
+  }
+}

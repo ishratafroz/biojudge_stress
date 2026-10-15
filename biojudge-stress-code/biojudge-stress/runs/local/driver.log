@@ -1,0 +1,11 @@
+Fri, Sep 25, 2026  9:32:22 PM phase A start
+Fri, Sep 25, 2026  9:32:32 PM server up, parallel=4
+Fri, Sep 25, 2026 10:32:53 PM --- restart after memory reap (prompt cache disabled) ---
+Fri, Sep 25, 2026 10:32:53 PM phase A start
+Fri, Sep 25, 2026 10:33:01 PM server up, parallel=4
+Sat, Sep 26, 2026 12:56:11 AM server stopped
+Sat, Sep 26, 2026 12:56:11 AM phase A exit 0
+Sat, Sep 26, 2026 12:56:12 AM phase B start
+Sat, Sep 26, 2026 12:56:20 AM server up, parallel=8
+2026-09-26 01:46:30
+L40S host: judge+select start (config ollama_l40s.yaml, 12 slots x 4 resident models, interleaved)

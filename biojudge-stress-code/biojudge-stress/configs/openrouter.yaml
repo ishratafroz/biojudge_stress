@@ -1,0 +1,50 @@
+# Main experiment through one OpenAI-compatible gateway (OpenRouter).
+#   export OPENROUTER_API_KEY=...
+#   python -m biojudge.run --config configs/openrouter.yaml --estimate
+#
+# Model IDs change over time: confirm each on https://openrouter.ai/models before running and
+# record the exact IDs + run date in the paper (Sec. IV). Judges and generators MUST share families
+# (that is what makes self-preference measurable); the utility model must be a different family.
+run_name: main
+out_dir: runs
+seed: 2026
+
+data:
+  domains:
+    literature:   {source: pubmedqa,      n: 100}
+    clinical:     {source: medqa,         n: 100}
+    pharmacology: {source: medmcqa_pharm, n: 100}
+  distractor: hard
+
+_openrouter: &or
+  provider: openai
+  base_url: https://openrouter.ai/api/v1
+  api_key_env: OPENROUTER_API_KEY
+
+models:
+  llama:   {<<: *or, model: meta-llama/llama-3.1-8b-instruct,   family: llama,   display: Llama-3.1-8B}
+  qwen:    {<<: *or, model: qwen/qwen-2.5-7b-instruct,          family: qwen,    display: Qwen2.5-7B}
+  gemma:   {<<: *or, model: google/gemma-3-12b-it,              family: gemma,   display: Gemma-3-12B, merge_system: true}
+  mistral: {<<: *or, model: mistralai/mistral-nemo,             family: mistral, display: Mistral-Nemo-12B, merge_system: true}
+  phi:     {<<: *or, model: microsoft/phi-4,                    family: phi,     display: Phi-4}
+
+roles:
+  generators: [llama, qwen, gemma, mistral]
+  judges:     [llama, qwen, gemma, mistral]
+  utility: phi          # padding + normaliser agent; deliberately outside the judge families
+
+experiment:
+  protocols: [base_raw, debias_raw, base_norm, debias_norm]
+  attacks: [authority, citation, format, confidence, injection, combo]
+  attack_pairs_per_item: 4
+  pad_mode: llm
+  pad_ratio: 2.5
+  select: {enabled: true, protocols: [base_raw, debias_norm]}
+
+runtime:
+  concurrency: 48
+  request_timeout: 120
+  max_api_retries: 6
+
+analysis:
+  bootstrap: 2000

@@ -1,0 +1,147 @@
+{
+  "config": {
+    "run_name": "local",
+    "out_dir": "runs",
+    "seed": 2026,
+    "data": {
+      "domains": {
+        "literature": {
+          "source": "pubmedqa",
+          "n": 25
+        },
+        "clinical": {
+          "source": "medqa",
+          "n": 25
+        },
+        "pharmacology": {
+          "source": "medmcqa_pharm",
+          "n": 25
+        }
+      },
+      "distractor": "hard",
+      "pubmedqa_path": null,
+      "cache_dir": "data_cache"
+    },
+    "models": {
+      "llama": {
+        "provider": "openai",
+        "base_url": "http://127.0.0.1:11436/v1",
+        "api_key_env": "OLLAMA_API_KEY",
+        "model": "llama3.2:3b",
+        "family": "llama",
+        "display": "Llama-3.2-3B"
+      },
+      "qwen": {
+        "provider": "openai",
+        "base_url": "http://127.0.0.1:11436/v1",
+        "api_key_env": "OLLAMA_API_KEY",
+        "model": "qwen2.5:3b",
+        "family": "qwen",
+        "display": "Qwen2.5-3B"
+      },
+      "gemma": {
+        "provider": "openai",
+        "base_url": "http://127.0.0.1:11436/v1",
+        "api_key_env": "OLLAMA_API_KEY",
+        "model": "gemma2:2b",
+        "family": "gemma",
+        "display": "Gemma-2-2B",
+        "merge_system": true
+      },
+      "mistral": {
+        "provider": "openai",
+        "base_url": "http://127.0.0.1:11436/v1",
+        "api_key_env": "OLLAMA_API_KEY",
+        "model": "ministral-3:3b",
+        "family": "mistral",
+        "display": "Ministral-3-3B"
+      },
+      "phi": {
+        "provider": "openai",
+        "base_url": "http://127.0.0.1:11436/v1",
+        "api_key_env": "OLLAMA_API_KEY",
+        "model": "phi4-mini",
+        "family": "phi",
+        "display": "Phi-4-mini"
+      }
+    },
+    "roles": {
+      "generators": [
+        "llama",
+        "qwen",
+        "gemma",
+        "mistral"
+      ],
+      "judges": [
+        "llama",
+        "qwen",
+        "gemma",
+        "mistral"
+      ],
+      "utility": "phi"
+    },
+    "experiment": {
+      "protocols": [
+        "base_raw",
+        "debias_raw",
+        "base_norm",
+        "debias_norm"
+      ],
+      "attacks": [
+        "authority",
+        "citation",
+        "format",
+        "confidence",
+        "injection",
+        "combo"
+      ],
+      "attack_pairs_per_item": 2,
+      "pad_mode": "llm",
+      "pad_ratio": 2.5,
+      "select": {
+        "enabled": true,
+        "protocols": [
+          "base_raw",
+          "debias_norm"
+        ]
+      }
+    },
+    "generation": {
+      "max_tokens_solo": 200,
+      "max_tokens_generate": 400,
+      "max_tokens_pad": 900,
+      "max_tokens_normalize": 250,
+      "max_tokens_judge": 300,
+      "max_retries_invalid": 2,
+      "retry_temperature": 0.7
+    },
+    "runtime": {
+      "concurrency": 48,
+      "request_timeout": 300,
+      "max_api_retries": 4,
+      "interleave_models": true
+    },
+    "analysis": {
+      "bootstrap": 2000
+    },
+    "mock": {},
+    "_ollama": {
+      "provider": "openai",
+      "base_url": "http://127.0.0.1:11436/v1",
+      "api_key_env": "OLLAMA_API_KEY"
+    },
+    "_config_path": "/home/uia0008@students.ad.unt.edu/files/biojudge-stress-code/biojudge-stress/configs/ollama_l40s.yaml"
+  },
+  "stages": [
+    "judge",
+    "select"
+  ],
+  "seconds": 5966.115780115128,
+  "llm_stats": {
+    "cache_hit": 1554,
+    "ok:gemma": 15466,
+    "ok:qwen": 15466,
+    "ok:mistral": 15466,
+    "ok:llama": 15120
+  }
+}

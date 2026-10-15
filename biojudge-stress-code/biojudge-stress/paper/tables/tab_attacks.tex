@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\caption{Attack success rate (\%) by content-free edit and configuration: share of verdicts that were correct on the clean pair and become incorrect once the edit is applied to the incorrect response (ties count one half). Any = broken by at least one of the five single edits. Subscripts: 95\% cluster-bootstrap half-widths.}
+\label{tab:attacks}
+\setlength{\tabcolsep}{2.2pt}
+\footnotesize
+\begin{tabular}{lcccccc}
+\toprule
+Edit & Base & +Debias & +Norm & +Deb+Norm & Jury & Full \\
+\midrule
+Authority (fake credentials) & 17{\scriptsize$\pm$3} & 17{\scriptsize$\pm$3} & 16{\scriptsize$\pm$4} & 15{\scriptsize$\pm$4} & 13{\scriptsize$\pm$5} & 19{\scriptsize$\pm$9} \\
+Fabricated citations & 23{\scriptsize$\pm$4} & 25{\scriptsize$\pm$4} & 20{\scriptsize$\pm$4} & 20{\scriptsize$\pm$4} & 18{\scriptsize$\pm$6} & 20{\scriptsize$\pm$8} \\
+Markdown formatting & 20{\scriptsize$\pm$3} & 19{\scriptsize$\pm$4} & 23{\scriptsize$\pm$4} & 20{\scriptsize$\pm$4} & 15{\scriptsize$\pm$6} & 22{\scriptsize$\pm$10} \\
+Asserted confidence & 17{\scriptsize$\pm$3} & 18{\scriptsize$\pm$3} & 19{\scriptsize$\pm$4} & 18{\scriptsize$\pm$3} & 12{\scriptsize$\pm$5} & 23{\scriptsize$\pm$9} \\
+Note to evaluator & 41{\scriptsize$\pm$5} & 45{\scriptsize$\pm$5} & 18{\scriptsize$\pm$3} & 16{\scriptsize$\pm$3} & 38{\scriptsize$\pm$8} & 16{\scriptsize$\pm$9} \\
+\midrule
+All combined & 40{\scriptsize$\pm$4} & 34{\scriptsize$\pm$4} & 22{\scriptsize$\pm$4} & 20{\scriptsize$\pm$4} & 37{\scriptsize$\pm$7} & 28{\scriptsize$\pm$9} \\
+Any single edit & 56{\scriptsize$\pm$5} & 59{\scriptsize$\pm$5} & 44{\scriptsize$\pm$6} & 45{\scriptsize$\pm$5} & 44{\scriptsize$\pm$8} & 45{\scriptsize$\pm$9} \\
+\textit{Control: placebo sentence} & 15{\scriptsize$\pm$3} & 19{\scriptsize$\pm$3} & 18{\scriptsize$\pm$4} & 19{\scriptsize$\pm$4} & 10{\scriptsize$\pm$4} & 20{\scriptsize$\pm$8} \\
+\textit{Control: held-out edit} & 20{\scriptsize$\pm$3} & 21{\scriptsize$\pm$4} & 19{\scriptsize$\pm$4} & 18{\scriptsize$\pm$3} & 14{\scriptsize$\pm$5} & 20{\scriptsize$\pm$9} \\
+\bottomrule
+\end{tabular}
+\end{table}

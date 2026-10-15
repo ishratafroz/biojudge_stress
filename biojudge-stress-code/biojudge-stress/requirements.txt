@@ -1,0 +1,9 @@
+numpy
+pandas
+scipy
+statsmodels
+pyyaml
+matplotlib
+openai
+anthropic
+pytest

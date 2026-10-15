@@ -1,0 +1,280 @@
+ABS:CORR:Base:dacc_citation	4.4
+ABS:CORR:Base:dacc_combo	13.1
+ABS:CORR:Base:dacc_consensus	2.4
+ABS:CORR:Base:dacc_injection	16.1
+ABS:DAccInjectionBase	16.1
+ABS:DeltaASRanyJury	11.6
+ABS:DeltaASRanyNorm	11.3
+ABS:DeltaASRanyRecusal	6.6
+ABS:DeltaASRanyStrip	11.8
+ABS:DeltaASRcomboDebias	5.2
+ABS:DeltaSPBNorm	6.8
+ABS:DeltaVBNorm	16.7
+ABS:RegWAPW	5.6
+ABS:SymDAccConfidenceBase	4.1
+ABS:SymDAccFormatBase	0.0
+ABS:VGPooledFourOpt	3.4
+ABS:VGPooledTwoOpt	21.8
+ASRKnown	53.2
+ASRUnknown	61.0
+ASRanyBase	55.8
+ASRanyMax	65.6
+ASRanyMin	46.2
+ASRanyStrip	43.9
+ASRconsBase	19.9
+ASRconsBaseCI	[16.7, 23.3]
+ASRconsDebNorm	18.0
+ASRconsDebNormCI	[14.6, 21.4]
+ASRinjBase	40.7
+ASRplaceboBase	14.6
+ASRplaceboBaseCI	[11.6, 17.9]
+AccBase	54.7
+AccBaseCI	[51.5, 58.0]
+AccBest	59.8
+AccDropBase	55.0
+AccDropBaseCI	[51.6, 58.4]
+AccKnown	58.2
+AccNormFallback	58.0
+AccNormRewrite	57.9
+AccStrictBase	52.3
+AccStrictBaseCI	[49.1, 55.7]
+AccUnknown	48.4
+AdjAuthorityBase	2.7
+AdjAuthorityBaseCI	[$-$0.2, 5.7]
+AdjCitationBase	8.2
+AdjCitationBaseCI	[4.7, 11.8]
+AdjConfidenceBase	2.1
+AdjConfidenceBaseCI	[$-$1.2, 5.5]
+AdjFormatBase	4.9
+AdjFormatBaseCI	[1.6, 8.3]
+AdjInjectionBase	26.0
+AdjInjectionBaseCI	[21.8, 30.5]
+CORR:Base:adj_consensus	5.3
+CORR:Base:asr_confidence	16.7
+CORR:Base:asr_format	19.5
+CORR:Base:asr_injection	40.7
+CORR:Base:dacc_confidence	3.3
+CORR:Base:dacc_placebo	3.7
+CORR:Base:rr_any	47.1
+CORR:Base:rr_placebo	26.1
+CORR:DebNorm:asr_placebo	18.6
+CORR:DebNorm:dacc_consensus	5.9
+CORR:Norm:asr_any	44.5
+CORR:Norm:asr_injection	18.2
+CORR:Strip:asr_injection	8.9
+CORRCI:Base:adj_consensus	[2.3, 8.5]
+CORRCI:Base:asr_any	[51.1, 60.7]
+CORRCI:Base:dacc_authority	[$-$3.1, 2.1]
+CORRCI:Base:dacc_citation	[$-$7.1, $-$1.8]
+CORRCI:Base:dacc_confidence	[0.4, 6.1]
+CORRCI:Base:dacc_consensus	[$-$4.8, $-$0.2]
+CORRCI:Base:dacc_format	[$-$4.2, 1.0]
+CORRCI:Base:dacc_injection	[$-$19.1, $-$13.3]
+CORRCI:Base:dacc_placebo	[0.9, 6.6]
+CORRCI:Base:rr_any	[42.4, 51.6]
+CORRCI:DebNorm:dacc_consensus	[2.5, 9.1]
+CORRP:Full:acc	$p<0.001$
+DAccNormPhiKnown	3.3
+DAccNormPhiKnownCI	[$-$0.4, 6.7]
+DAccNormPhiUnknown	2.9
+DAccNormPhiUnknownCI	[$-$2.3, 7.9]
+DOM:clinical:mistral:asr_any	37.2
+DOM:literature:llama:acc	35.8
+DOM:literature:llama:asr_any	69.7
+DOM:literature:mistral:asr_any	57.8
+DOM:pharmacology:llama:acc	56.8
+DOM:pharmacology:llama:asr_any	45.1
+DOMCI:literature:llama:acc	[27.9, 44.0]
+DecidedShareBase	95.1
+DeltaASRanyStripCI	[$-$16.3, $-$7.4]
+DeltaASRcomboDebiasCI	[$-$9.6, $-$0.9]
+DeltaAccDebNorm	3.8
+DeltaAccDebNormCI	[0.8, 6.7]
+DeltaAccDebias	0.0
+DeltaAccDebiasCI	[$-$2.4, 2.6]
+DeltaAccFull	2.3
+DeltaAccFullCI	[$-$1.3, 5.7]
+DeltaAccJury	0.8
+DeltaAccJuryCI	[$-$0.6, 2.3]
+DeltaAccNorm	3.2
+DeltaAccNormCI	[0.3, 6.0]
+DeltaAccRecusal	2.0
+DeltaAccRecusalCI	[0.3, 3.6]
+DeltaAccStripCI	[$-$2.3, 1.3]
+DeltaFlipDebias	0.8
+DeltaFlipJury	6.7
+DeltaFlipRecusal	7.4
+DeltaSPBJury	11.5
+DeltaSPBRecusal	7.0
+DeltaSPBStrip	0.9
+DeltaSPBStripCI	[$-$3.4, 7.9]
+DeltaVBStripCI	[$-$2.6, 2.2]
+EQ:p_tost	$p=0.041$
+FB:pad	54.5
+FB:raw	4.6
+FlipBase	39.2
+FlipKnown	39.4
+FlipMax	50.3
+FlipMin	31.2
+FlipUnknown	38.9
+HardNegRate	62.7
+HolmDAccFull	p=0.452
+HolmIC	p=0.702
+HolmKWAcc	p=0.097
+ICBase	0.9
+ICBaseCI	[$-$3.7, 5.6]
+ICBaseP	p=0.702
+ICBound	5
+ICMDE	6.7
+ICSE	2.4
+IMP:Norm:vb	5.1
+IMPCI:Norm:vb	[1.3, 9.0]
+JudgeBestAcc	Ministral-3-3B
+JudgeCallsPerSec	10.3
+JudgeMaxASR	Qwen2.5-3B
+JudgeMaxVB	Qwen2.5-3B
+JudgeSecPerKCall	97
+KWASR	0.64
+KWASRP	p=0.148
+KWAcc	0.82
+KWAccP	p=0.032
+KWSPB	0.64
+KWSPBP	p=0.146
+KWVB	0.60
+KWVBP	p=0.171
+KappaBase	0.09
+NCtrlVerdicts	29{,}200
+NEG:CORR:Base:dacc_authority	$-$0.5
+NEG:CORR:Base:dacc_citation	$-$4.4
+NEG:CORR:Base:dacc_format	$-$1.6
+NEG:CORR:Base:dacc_injection	$-$16.1
+NEG:DeltaAccStrip	$-$0.4
+NEG:DeltaAccSwap	$-$0.1
+NEG:DeltaFlipStrip	$-$0.2
+NEG:DeltaVBDebias	$-$0.6
+NEG:DeltaVBStrip	$-$0.1
+NEG:PJ:gemma:spb	$-$7.9
+NEG:PJ:mistral:ic_self_len	$-$9.8
+NEG:PJ:qwen:spb	$-$12.7
+NEG:RegSWPW	$-$1.8
+NEG:RegSWadj	$-$8.7
+NEG:RegWAPW	$-$5.6
+NEG:SelPosOne	$-$3.9
+NEG:SelPosOneDN	$-$10.0
+NEG:VBNorm	$-$5.8
+NEG:VG:llama	$-$23.6
+NEG:VGBest	$-$2.5
+NEG:VGPooled	$-$9.7
+NItemsClin	25
+NItemsKept	73
+NItemsLit	25
+NItemsPharm	23
+NItemsSampled	75
+NMacrosMain	207
+NPairwise	85{,}264
+NPhiKnownItems	47
+NPhiUnknownItems	26
+NSelect	7{,}008
+NormLLMRate	85.7
+OllamaVersion	0.32.1
+PJ:gemma:ppi	40.6
+PJ:llama:acc	47.6
+PJ:llama:spb	5.1
+PJ:mistral:ppi	0.5
+PJ:mistral:spb	59.2
+PJCI:gemma:spb	[$-$17.1, 2.4]
+PJCI:llama:spb	[$-$6.5, 17.1]
+PJCI:mistral:ic_self_len	[$-$19.2, $-$0.9]
+PJCI:mistral:spb	[50.3, 68.5]
+PJCI:qwen:spb	[$-$25.3, $-$0.3]
+PJP:mistral:spb	$p<0.001$
+PadLLMRate	99.5
+PadRatio	2.68
+ParseAuditCap	300
+ParseAuditFails	60
+ParseAuditMaxTok	295
+ParseAuditN	100
+ParseAuditReparse	68.3
+ParseAuditStop	100
+ParseFailJudgeMax	Ministral-3-3B
+ParseFailJudgeMin	Qwen2.5-3B
+ParseFailMax	3.2
+ParseFailMin	0.4
+ParseFailRate	1.5
+PhaseCtrlHours	1.0
+PhaseJudgeHours	1.7
+PhasePadHours	2.4
+RRFormatBase	20.0
+RegPR	12.4
+RegPW	7.6
+RegSW	8.7
+RegSWPWCI	[$-$5.9, 2.2]
+RegSWPWP	p=0.372
+RegWA	19.8
+RegWACI	[$-$23.3, $-$16.2]
+RegWAPW	-5.6
+RegWAPWP	p=0.004
+RegWASW	0.6
+RegWASWP	p=0.782
+RetestAcc	54.0
+RetestFlipPct	17.1
+RetestJudgeMax	Gemma-2-2B
+RetestJudgeMin	Qwen2.5-3B
+RetestN	2{,}336
+RetestText	11.9
+RetestVerdict	82.9
+RetestVerdictMax	92.0
+RetestVerdictMin	75.0
+SOLO:llama	71.2
+SPBBase	21.2
+SPBKnown	11.2
+SPBMax	59.2
+SPBUnknown	10.6
+SelAccAttack	19.9
+SelAccAttackCI	[15.9, 24.4]
+SelAccAttackDN	29.4
+SelAccAttackParsed	21.6
+SelAccClean	28.8
+SelAccCleanCI	[24.0, 33.6]
+SelAccCleanDN	32.0
+SelAccPad	25.8
+SelCapAttack	40.5
+SelCapAttackCI	[36.8, 44.2]
+SelCapClean	20.1
+SelCapCleanDN	16.6
+SelCapPad	27.0
+SelChanceScored	23.1
+SelParseRate	92.6
+SelParseRateDN	87.6
+SelPickPosMax	2
+SelPickPosMaxShare	37.8
+SoloMax	71.2
+SoloMin	58.9
+SoloPhi	64.4
+SymDAccAuthorityBase	0.3
+SymDAccAuthorityBaseCI	[$-$3.0, 3.4]
+SymDAccCitationBase	6.0
+SymDAccCitationBaseCI	[3.0, 8.9]
+SymDAccConfidenceBaseCI	[$-$7.5, $-$1.1]
+SymDAccFormatBaseCI	[$-$3.5, 3.5]
+SymDAccInjectionBase	17.7
+SymDAccInjectionBaseCI	[14.1, 21.3]
+SymInjectionBase	9.8
+SymInjectionBaseCI	[7.2, 12.6]
+TieRate	4.8
+VBBase	10.9
+VBBaseCI	[8.3, 13.5]
+VBKnown	11.8
+VBMax	16.9
+VBMin	1.7
+VBUnknown	9.2
+VBsymBase	23.3
+VGCI:llama	[$-$35.5, $-$11.6]
+VGJudgeBest	Qwen2.5-3B
+VGPooledCI	[$-$17.3, $-$2.5]
+VGPooledFourOptCI	[$-$11.5, 4.9]
+VGPooledTwoOptCI	[$-$34.1, $-$8.4]
+ValidRate	99.7
+WORD:NEditsAbovePlacebo	three
+WORDS:Gemma-2-2B	99
+WORDS:Ministral-3-3B	129
